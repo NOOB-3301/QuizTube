@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
   attempts: {
-    type:[{type: mongoose.Schema.Types.ObjectId, ref:"Question"}],
+    type:[{type: mongoose.Schema.Types.ObjectId, ref:"Workspace"}],
     default: [],
   },
   plantowatch: [{
@@ -20,6 +20,10 @@ const userSchema = new mongoose.Schema({
   score:{
     type:Number,
     default: 0
+  },
+  workspaces: {
+    type: [{type: mongoose.Schema.Types.ObjectId, ref: "Workspace"}],
+    default: []
   }
 },{timestamps: true});
 

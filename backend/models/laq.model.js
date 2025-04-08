@@ -9,6 +9,11 @@ const laqSchema = new mongoose.Schema({
         type:String,
         required:true
     },
+    workspaceId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Question",
+        required: true
+    }
 },{timestamps: true});
 const LaqModel = mongoose.model("Laq", laqSchema);
 export { LaqModel };

@@ -12,6 +12,11 @@ const summarySchema = new mongoose.Schema({
     summary:{
         type: String,
         required: true,
+    },
+    workspaceId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Question",
+        required: true
     }
 },{timestamps: true});
 

@@ -10,6 +10,11 @@ const quizSchema = new mongoose.Schema({
     connrectIndex:{
         type:Number
     },
+    workspaceId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Question",
+        required: true
+    }
 },{timestamps: true});
 
 const QuizModel = mongoose.model("Quiz", quizSchema);

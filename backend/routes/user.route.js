@@ -6,7 +6,7 @@ const userRouter = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'; // use env in prod
 
-userRouter.post('/auth', async (req, res) => {
+userRouter.post('/', async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {

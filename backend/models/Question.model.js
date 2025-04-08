@@ -1,30 +1,25 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const questionSchema = new mongoose.Schema({
+const workspaceSchema = new mongoose.Schema({
     videoId: {
         type: String,
-        required: true,
+        required: true
     },
     videoLink: {
         type: String,
-        required: true,
+        required: true
     },
     videoTitle: {
         type: String,
-        required: true,
+        required: true
     },
     type: {
         type: String,
-        enum: ['quiz', 'summary', 'laq'],
+        enum: ['mcq', 'long-answer', 'summarize'],
         required: true
-    },
-    questionRef: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        refPath: 'type'
     }
 }, { timestamps: true });
 
-const Question = mongoose.model('Question', questionSchema);
+const Workspace = mongoose.model("Workspace", workspaceSchema);
 
-export { Question }
+export { Workspace };

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import AuthModal from "./AuthModal";
 
 type QuizFormat = "mcq" | "long-answer" | "summarize";
 
@@ -7,6 +8,7 @@ const Home = () => {
   const [selectedFormat, setSelectedFormat] = useState<QuizFormat>("mcq");
   const [questionCount, setQuestionCount] = useState(10);
   const [wordCount, setWordCount] = useState(250);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const handleFormatChange = (format: QuizFormat) => {
     setSelectedFormat(format);
@@ -29,13 +31,42 @@ const Home = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({
-      youtubeLink,
-      selectedFormat,
-      count: selectedFormat === "summarize" ? wordCount : questionCount
-    });
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/api/addworkspace', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          videoUrl: youtubeLink,
+          type: selectedFormat,
+          count: selectedFormat === 'summarize' ? wordCount : questionCount
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to create workspace');
+      }
+
+      // Redirect to workspace with the ID
+      window.location.href = `/workspace/${data.workspaceId}`;
+
+    } catch (error) {
+      console.error('Error:', error);
+      // You might want to show an error message to the user here
+    }
   };
 
   return (
@@ -149,6 +180,11 @@ const Home = () => {
                    "Summary"}
         </button>
       </form>
+
+      <AuthModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
     </div>
   );
 };
