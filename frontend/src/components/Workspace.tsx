@@ -143,22 +143,6 @@ const Workspace = () => {
               </div>
             )}
 
-            {data.type === "long-answer" && data.questions && (
-              <div>
-                <h3 className="text-xl font-semibold mb-4">
-                  Long Answer Questions
-                </h3>
-                {data.questions.map((q, qIndex) => (
-                  <div key={qIndex} className="mb-6">
-                    <p className="font-medium">{q.question}</p>
-                    <p className="mt-2 text-gray-700">
-                      {q.answer || "No answer provided"}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-
             {data.type === "summarize" && data.summary && (
               <div>
                 <h3 className="text-xl font-semibold mb-4">Summary</h3>
