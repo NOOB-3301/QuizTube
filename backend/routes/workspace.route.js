@@ -7,10 +7,11 @@ import { Subtitlemain } from '../helpers/scrapecaption.js';
 import extractVideoId from '../helpers/extractVidId.js';
 import { generateWorkspace } from '../helpers/generateWorkspace.js';
 import { User } from '../models/user.model.js';
+import { authMiddleware } from '../helpers/authenticatejwt.js';
 
 const workspaceRouter = express.Router();
 
-workspaceRouter.post('/addworkspace', async (req, res) => {
+workspaceRouter.post('/addworkspace',authMiddleware, async (req, res) => {
     try {
         const { videoUrl, type, count } = req.body;
         const userId = req.user.id; // Assuming auth middleware sets req.user
