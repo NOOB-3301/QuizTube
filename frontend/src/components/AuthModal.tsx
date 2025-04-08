@@ -1,5 +1,6 @@
+import axios from "axios";
 import { useState } from "react";
-
+import {b_link} from "./Baselink.ts";
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -22,25 +23,19 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/auth", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      });
+      const response = await axios.post(`${b_link}/auth`,{username,password})
+      console.log(response)
+      const data =  response.data;
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Authentication failed");
-      }
+      // if (!response.ok) {
+      //   throw new Error(data.message || "Authentication failed");
+      // }
 
       localStorage.setItem("token", data.token);
       onClose();
       window.location.reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Authentication failed");
+      setError(err instanceof Error ? err.response.data.message : "Authentication failed");
     }
   };
 

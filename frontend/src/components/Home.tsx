@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { use, useState } from "react";
 import AuthModal from "./AuthModal";
-
+import axios from "axios";
+import { b_link } from "./Baselink.js";
 type QuizFormat = "mcq" | "long-answer" | "summarize";
 
 const Home = () => {
@@ -9,6 +10,7 @@ const Home = () => {
   const [questionCount, setQuestionCount] = useState(10);
   const [wordCount, setWordCount] = useState(250);
   const [showAuthModal, setShowAuthModal] = useState(false);
+
 
   const handleFormatChange = (format: QuizFormat) => {
     setSelectedFormat(format);
@@ -34,7 +36,14 @@ const Home = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
-    
+    const response = await axios.post(`${b_link}/api/addworkspace`,{videoUrl:youtubeLink, type: selectedFormat, count: selectedFormat === "summarize" ? wordCount : questionCount}, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    const data = response.data;
+    console.log(data)
     if (!token) {
       setShowAuthModal(true);
       return;
