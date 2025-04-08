@@ -2,7 +2,6 @@ import { use, useState } from "react";
 import AuthModal from "./AuthModal";
 import axios from "axios";
 import { b_link } from "./Baselink.js";
-import { useNavigate } from "react-router-dom";
 type QuizFormat = "mcq" | "long-answer" | "summarize";
 
 const Home = () => {
@@ -12,7 +11,6 @@ const Home = () => {
   const [wordCount, setWordCount] = useState(250);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  const navitgator = useNavigate();
 
   const handleFormatChange = (format: QuizFormat) => {
     setSelectedFormat(format);
