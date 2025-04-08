@@ -1,35 +1,42 @@
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import Home from "./components/Home";
 import Workspace from "./components/Workspace";
-import Dashboard from "./components/Dashboard";
 import Leaderboard from "./components/Leaderboard";
 import Signup from "./components/Signup";
 import "./App.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AuthModal from "./components/AuthModal";
+import NotFound from "./components/NotFound.tsx";
 
 function App() {
-  // Temporary login state - replace with your actual auth logic
-  const isLoggedIn = false;
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token);
+  }, []);
 
   return (
-    
     <div className="app-container">
       <nav className="navbar">
         <Link to="/" className="logo">
-          QuizTube
+          BrainTube
         </Link>
         <div className="nav-right">
           {isLoggedIn ? (
-            <div className="profile-icon">
-              <img src="/default-avatar.svg" alt="Profile" />
-            </div>
+            <button
+              onClick={() => navigate("/leaderboard")}
+              className="signup-button"
+            >
+              Leaderboard
+            </button>
           ) : (
-            // <Link to="/signup" className="signup-button">
-            //   Sign Up
-            // </Link>
-            <button onClick={()=>setShowAuthModal(true)} className="signup-button">
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="signup-button"
+            >
               Sign Up
             </button>
           )}
@@ -40,9 +47,9 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/workspace/:id" element={<Workspace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
         <AuthModal
           isOpen={showAuthModal}

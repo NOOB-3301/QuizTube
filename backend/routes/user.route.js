@@ -1,6 +1,7 @@
 import express from 'express';
 import { User } from '../models/user.model.js';
 import jwt from 'jsonwebtoken';
+import { authMiddleware } from '../helpers/authenticatejwt.js';
 
 const userRouter = express.Router();
 
@@ -43,4 +44,29 @@ userRouter.post('/', async (req, res) => {
     }
 });
 
-export { userRouter};
+// New endpoint to get leaderboard data
+userRouter.get('/leaderboard', authMiddleware, async (req, res) => {
+    try {
+        // Get top 10 users ordered by score
+        const topUsers = await User.find({}, 'name score totalTestCount')
+            .sort({ score: -1 })
+            .limit(10);
+
+        // Get current user's data and rank
+        const currentUser = await User.findById(req.user.id);
+        const userRank = await User.countDocuments({ score: { $gt: currentUser.score } }) + 1;
+
+        res.json({
+            topUsers,
+            currentUser: {
+                ...currentUser.toObject(),
+                rank: userRank
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching leaderboard:', error);
+        res.status(500).json({ message: 'Failed to fetch leaderboard data' });
+    }
+});
+
+export { userRouter };

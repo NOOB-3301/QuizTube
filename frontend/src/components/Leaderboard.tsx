@@ -1,71 +1,100 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { b_link } from "./Baselink";
 
-interface LeaderboardEntry {
-  rank: number;
+interface LeaderboardUser {
   name: string;
   score: number;
-  testsCompleted: number;
-  isCurrentUser?: boolean;
+  totalTestCount: number;
+  _id?: string;
+}
+
+interface CurrentUser extends LeaderboardUser {
+  rank: number;
 }
 
 export default function Leaderboard() {
-  // Mock data - replace with actual API call
-  const [leaderboardData] = useState<LeaderboardEntry[]>([
-    { rank: 1, name: "Alex Thompson", score: 980, testsCompleted: 45 },
-    { rank: 2, name: "Sarah Chen", score: 945, testsCompleted: 42 },
-    { rank: 3, name: "Mike Johnson", score: 920, testsCompleted: 40 },
-    { rank: 4, name: "Emma Davis", score: 890, testsCompleted: 38 },
-    { rank: 5, name: "James Wilson", score: 870, testsCompleted: 35 },
-    { rank: 6, name: "Lisa Anderson", score: 850, testsCompleted: 33 },
-    { rank: 7, name: "David Lee", score: 830, testsCompleted: 30 },
-    { rank: 8, name: "Rachel Kim", score: 810, testsCompleted: 28 },
-    { rank: 9, name: "Chris Martin", score: 790, testsCompleted: 25 },
-    { rank: 10, name: "Sofia Garcia", score: 770, testsCompleted: 23 },
-  ]);
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardUser[]>([]);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const [userRank] = useState<LeaderboardEntry>({
-    rank: 23,
-    name: "John Doe",
-    score: 650,
-    testsCompleted: 15,
-    isCurrentUser: true,
-  });
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(`${b_link}/auth/leaderboard`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setLeaderboardData(response.data.topUsers);
+        setCurrentUser(response.data.currentUser);
+      } catch (err) {
+        setError("Failed to load leaderboard data");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLeaderboard();
+  }, []);
+
+  if (loading)
+    return <div className="text-center mt-10 text-lg">Loading...</div>;
+  if (error)
+    return <div className="text-center mt-10 text-red-500">{error}</div>;
+
+  const isUserInTopTen =
+    currentUser && leaderboardData.some((user) => user._id === currentUser._id);
 
   return (
     <div className="leaderboard-container">
       <div className="leaderboard-section">
-        <h2>Leaderboard</h2>
-        <div className="leaderboard-list">
-          {leaderboardData.map((entry) => (
-            <div key={entry.rank} className="leaderboard-entry">
-              <div className="rank">#{entry.rank}</div>
-              <div className="user-info">
-                <span className="name">{entry.name}</span>
-                <div className="user-stats">
-                  <span className="score">{entry.score} pts</span>
-                  <span className="tests-completed">
-                    {entry.testsCompleted} total tests taken
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="user-rank-section">
-          <h3>Your Ranking</h3>
-          <div className="leaderboard-entry current-user">
-            <div className="rank">#{userRank.rank}</div>
-            <div className="user-info">
-              <span className="name">{userRank.name}</span>
-              <div className="user-stats">
-                <span className="score">{userRank.score} pts</span>
-                <span className="tests-completed">
-                  {userRank.testsCompleted} total tests taken
-                </span>
-              </div>
-            </div>
+        <h2 className="text-4xl font-bold">Leaderboard</h2>
+        <div className="w-full max-w-4xl mx-auto">
+          <div className="grid grid-cols-4 gap-4 p-4 bg-gray-800 text-white rounded-t-lg font-semibold">
+            <div className="text-center">Rank</div>
+            <div>Username</div>
+            <div className="text-center">Average Points</div>
+            <div className="text-center">Tests Taken</div>
           </div>
+
+          <div className="leaderboard-list">
+            {leaderboardData.map((user, index) => (
+              <div
+                key={index}
+                className={`grid grid-cols-4 gap-4 p-4 items-center ${
+                  user._id === currentUser?._id
+                    ? "bg-blue-100 dark:bg-blue-900"
+                    : "bg-white dark:bg-gray-800"
+                }`}
+              >
+                <div className="text-center font-bold">#{index + 1}</div>
+                <div>{user.name}</div>
+                <div className="text-center text-green-600 dark:text-green-400 font-semibold">
+                  {user.score} pts
+                </div>
+                <div className="text-center">{user.totalTestCount}</div>
+              </div>
+            ))}
+          </div>
+
+          {currentUser && !isUserInTopTen && (
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold mb-2">Your Ranking</h3>
+              <div className="grid grid-cols-4 gap-4 p-4 items-center bg-blue-100 dark:bg-blue-900 rounded-lg">
+                <div className="text-center font-bold">#{currentUser.rank}</div>
+                <div>{currentUser.name}</div>
+                <div className="text-center text-green-600 dark:text-green-400 font-semibold">
+                  {currentUser.score} pts
+                </div>
+                <div className="text-center">{currentUser.totalTestCount}</div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

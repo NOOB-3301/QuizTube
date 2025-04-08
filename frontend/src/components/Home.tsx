@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AuthModal from "./AuthModal";
 import axios from "axios";
 import { b_link } from "./Baselink.js";
@@ -6,6 +7,7 @@ import { b_link } from "./Baselink.js";
 type QuizFormat = "mcq" | "summarize";
 
 const Home = () => {
+  const navigate = useNavigate();
   const [youtubeLink, setYoutubeLink] = useState("");
   const [selectedFormat, setSelectedFormat] = useState<QuizFormat>("mcq");
   const [questionCount, setQuestionCount] = useState(10);
@@ -58,16 +60,17 @@ const Home = () => {
       );
 
       const data = response.data;
-      window.location.href = `/workspace/${data.workspaceId}`;
+      navigate(`/workspace/${data.workspaceId}`);
     } catch (error) {
       console.error("Error:", error);
+    } finally {
       setIsLoading(false);
     }
   };
 
   return (
     <div className="home-container">
-      <h1>Welcome to QuizTube</h1>
+      <h1>Welcome to BrainTube</h1>
       <p>Create and take quizzes from YouTube videos</p>
 
       {isLoading && (
