@@ -15,7 +15,7 @@ const workspaceSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['mcq', 'long-answer', 'summarize'],
+        enum: ['mcq', 'summarize'],
         required: true
     }
 }, { timestamps: true });

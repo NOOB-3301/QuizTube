@@ -1,7 +1,6 @@
 import express from 'express';
 import { Workspace } from '../models/Question.model.js';
 import { QuizModel } from '../models/quiz.models.js';
-import { LaqModel } from '../models/laq.model.js';
 import { SummaryModel } from '../models/summary.model.js';
 import { Subtitlemain } from '../helpers/scrapecaption.js';
 import extractVideoId from '../helpers/extractVidId.js';
@@ -14,7 +13,7 @@ const workspaceRouter = express.Router();
 workspaceRouter.post('/addworkspace',authMiddleware, async (req, res) => {
     try {
         const { videoUrl, type, count } = req.body;
-        const userId = req.user.id; // Assuming auth middleware sets req.user
+        const userId = req.user.id;
 
         // Extract video ID from URL
         const videoId = extractVideoId(videoUrl)
@@ -39,42 +38,24 @@ workspaceRouter.post('/addworkspace',authMiddleware, async (req, res) => {
         // Generate workspace content using AI
         const workspace = await generateWorkspace(subtitles, type, count);
 
-        switch (type) {
-            case 'mcq':
-                // Create quiz questions in database
-                await QuizModel.create(
-                    workspace.questions.map(q => ({
-                        question: q.question,
-                        options: q.options,
-                        correctIndex: q.correctIndex,
-                        workspaceId: workspaceDoc._id
-                    }))
-                );
-                break;
-
-            case 'long-answer':
-                // Create LAQ questions
-                await LaqModel.create(
-                    workspace.questions.map(q => ({
-                        question: q.question,
-                        answer: q.answer, 
-                        workspaceId: workspaceDoc._id
-                    }))
-                );
-                break;
-
-            case 'summarize':
-                // Create summary entry
-                await SummaryModel.create({
-                    videoId,
-                    videoLink: videoUrl,
-                    summary: workspace.summary,
+        if (type === 'mcq') {
+            // Create quiz questions in database
+            await QuizModel.create(
+                workspace.questions.map(q => ({
+                    question: q.question,
+                    options: q.options,
+                    correctIndex: q.correctIndex,
                     workspaceId: workspaceDoc._id
-                });
-                break;
-
-            default:
-                return res.status(400).json({ message: 'Invalid question type' });
+                }))
+            );
+        } else if (type === 'summarize') {
+            // Create summary entry
+            await SummaryModel.create({
+                videoId,
+                videoLink: videoUrl,
+                summary: workspace.summary,
+                workspaceId: workspaceDoc._id
+            });
         }
 
         // Add workspace to user's workspaces array
@@ -104,16 +85,10 @@ workspaceRouter.get('/workspace/:id', authMiddleware, async (req, res) => {
         }
 
         let content;
-        switch (workspace.type) {
-            case 'mcq':
-                content = await QuizModel.find({ workspaceId });
-                break;
-            case 'long-answer':
-                content = await LaqModel.find({ workspaceId });
-                break;
-            case 'summarize':
-                content = await SummaryModel.findOne({ workspaceId });
-                break;
+        if (workspace.type === 'mcq') {
+            content = await QuizModel.find({ workspaceId });
+        } else if (workspace.type === 'summarize') {
+            content = await SummaryModel.findOne({ workspaceId });
         }
 
         res.json({

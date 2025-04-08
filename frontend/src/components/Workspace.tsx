@@ -7,12 +7,11 @@ import { b_link } from "./Baselink";
 interface WorkspaceData {
   videoId: string;
   videoTitle: string;
-  type: "mcq" | "long-answer" | "summarize";
+  type: "mcq" | "summarize";
   questions?: {
     question: string;
     options?: string[];
     correctIndex?: number;
-    answer?: string;
   }[];
   summary?: string;
 }
@@ -81,22 +80,6 @@ const Workspace = () => {
                     </label>
                   ))}
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {data.type === "long-answer" && data.questions && (
-          <div className="laq-section">
-            <h3>Long Answer Questions</h3>
-            {data.questions.map((q, index) => (
-              <div key={index} className="question-card">
-                <p className="question">{q.question}</p>
-                <textarea
-                  className="answer-input"
-                  placeholder="Type your answer here..."
-                  rows={5}
-                />
               </div>
             ))}
           </div>

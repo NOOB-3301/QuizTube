@@ -3,7 +3,7 @@ import AuthModal from "./AuthModal";
 import axios from "axios";
 import { b_link } from "./Baselink.js";
 
-type QuizFormat = "mcq" | "long-answer" | "summarize";
+type QuizFormat = "mcq" | "summarize";
 
 const Home = () => {
   const [youtubeLink, setYoutubeLink] = useState("");
@@ -17,8 +17,6 @@ const Home = () => {
     setSelectedFormat(format);
     if (format === "mcq") {
       setQuestionCount(10);
-    } else if (format === "long-answer") {
-      setQuestionCount(5);
     } else {
       setWordCount(250);
     }
@@ -27,16 +25,14 @@ const Home = () => {
   const getDescription = () => {
     if (selectedFormat === "summarize") {
       return `A ${wordCount}-word summary of the video content`;
-    } else if (selectedFormat === "mcq") {
-      return `${questionCount} multiple choice questions to test understanding`;
     } else {
-      return `${questionCount} open-ended questions for deeper learning`;
+      return `${questionCount} multiple choice questions to test understanding`;
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
 
     if (!token) {
       setShowAuthModal(true);
@@ -46,21 +42,25 @@ const Home = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(`${b_link}/api/addworkspace`, {
-        videoUrl: youtubeLink,
-        type: selectedFormat,
-        count: selectedFormat === 'summarize' ? wordCount : questionCount
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+      const response = await axios.post(
+        `${b_link}/api/addworkspace`,
+        {
+          videoUrl: youtubeLink,
+          type: selectedFormat,
+          count: selectedFormat === "summarize" ? wordCount : questionCount,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
+      );
 
       const data = response.data;
       window.location.href = `/workspace/${data.workspaceId}`;
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
       setIsLoading(false);
     }
   };
@@ -69,14 +69,14 @@ const Home = () => {
     <div className="home-container">
       <h1>Welcome to QuizTube</h1>
       <p>Create and take quizzes from YouTube videos</p>
-      
+
       {isLoading && (
         <div className="loading-container">
           <img src="/loading.svg" alt="Loading..." />
           <p>Generating your workspace...</p>
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit} className="video-form">
         <div className="input-group">
           <input
@@ -101,20 +101,6 @@ const Home = () => {
             <div className="format-option-content">
               <span className="format-label">Multiple Choice</span>
               <span className="count-limit">Max 25 questions</span>
-            </div>
-          </label>
-
-          <label className="format-option">
-            <input
-              type="radio"
-              name="format"
-              value="long-answer"
-              checked={selectedFormat === "long-answer"}
-              onChange={(e) => handleFormatChange(e.target.value as QuizFormat)}
-            />
-            <div className="format-option-content">
-              <span className="format-label">Long Answer</span>
-              <span className="count-limit">Max 10 questions</span>
             </div>
           </label>
 
@@ -163,13 +149,13 @@ const Home = () => {
                   type="range"
                   id="questionCount"
                   min="1"
-                  max={selectedFormat === "mcq" ? 25 : 10}
+                  max="25"
                   value={questionCount}
                   onChange={(e) => setQuestionCount(Number(e.target.value))}
                 />
                 <div className="slider-labels">
                   <span>1</span>
-                  <span>{selectedFormat === "mcq" ? "25" : "10"}</span>
+                  <span>25</span>
                 </div>
               </div>
             </div>
@@ -178,14 +164,15 @@ const Home = () => {
         </div>
 
         <button type="submit" className="generate-button" disabled={isLoading}>
-          {isLoading ? 'Generating...' : 
-            selectedFormat === "mcq" ? "Generate Quiz" : 
-            selectedFormat === "long-answer" ? "Generate Questions" : 
-            "Generate Summary"}
+          {isLoading
+            ? "Generating..."
+            : selectedFormat === "mcq"
+            ? "Generate Quiz"
+            : "Generate Summary"}
         </button>
       </form>
 
-      <AuthModal 
+      <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
       />
