@@ -94,4 +94,41 @@ workspaceRouter.post('/addworkspace',authMiddleware, async (req, res) => {
     }
 });
 
+workspaceRouter.get('/workspace/:id', authMiddleware, async (req, res) => {
+    try {
+        const workspaceId = req.params.id;
+        const workspace = await Workspace.findById(workspaceId);
+        
+        if (!workspace) {
+            return res.status(404).json({ message: 'Workspace not found' });
+        }
+
+        let content;
+        switch (workspace.type) {
+            case 'mcq':
+                content = await QuizModel.find({ workspaceId });
+                break;
+            case 'long-answer':
+                content = await LaqModel.find({ workspaceId });
+                break;
+            case 'summarize':
+                content = await SummaryModel.findOne({ workspaceId });
+                break;
+        }
+
+        res.json({
+            videoId: workspace.videoId,
+            videoTitle: workspace.videoTitle,
+            type: workspace.type,
+            ...(workspace.type === 'summarize' 
+                ? { summary: content?.summary } 
+                : { questions: content })
+        });
+
+    } catch (error) {
+        console.error('Error fetching workspace:', error);
+        res.status(500).json({ message: 'Failed to fetch workspace' });
+    }
+});
+
 export { workspaceRouter };
