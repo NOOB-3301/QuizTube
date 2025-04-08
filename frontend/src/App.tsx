@@ -5,12 +5,16 @@ import Dashboard from "./components/Dashboard";
 import Leaderboard from "./components/Leaderboard";
 import Signup from "./components/Signup";
 import "./App.css";
+import { useState } from "react";
+import AuthModal from "./components/AuthModal";
 
 function App() {
   // Temporary login state - replace with your actual auth logic
   const isLoggedIn = false;
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   return (
+    
     <div className="app-container">
       <nav className="navbar">
         <Link to="/" className="logo">
@@ -22,9 +26,12 @@ function App() {
               <img src="/default-avatar.svg" alt="Profile" />
             </div>
           ) : (
-            <Link to="/signup" className="signup-button">
+            // <Link to="/signup" className="signup-button">
+            //   Sign Up
+            // </Link>
+            <button onClick={()=>setShowAuthModal(true)} className="signup-button">
               Sign Up
-            </Link>
+            </button>
           )}
         </div>
       </nav>
@@ -37,6 +44,10 @@ function App() {
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/signup" element={<Signup />} />
         </Routes>
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+        />
       </main>
     </div>
   );
