@@ -57,7 +57,7 @@ workspaceRouter.post('/addworkspace',authMiddleware, async (req, res) => {
                 await LaqModel.create(
                     workspace.questions.map(q => ({
                         question: q.question,
-                        answer: "", // Will be filled by user
+                        answer: q.answer, 
                         workspaceId: workspaceDoc._id
                     }))
                 );

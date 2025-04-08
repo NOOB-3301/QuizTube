@@ -31,7 +31,7 @@ Content: ${truncatedSubtitles}`;
       
     case 'long-answer':
       prompt = `Create ${count} long answer questions based on the following content.
-IMPORTANT: Respond ONLY with a JSON object containing an array of questions.
+IMPORTANT: Respond ONLY with a JSON object containing an array of questions and their answer within 100 words.
 Format: {
   "questions": [
     {
