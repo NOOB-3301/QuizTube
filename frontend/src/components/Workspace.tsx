@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import YouTube from 'react-youtube';
-import axios from 'axios';
-import { b_link } from './Baselink';
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import YouTube from "react-youtube";
+import axios from "axios";
+import { b_link } from "./Baselink";
 
 interface WorkspaceData {
   videoId: string;
   videoTitle: string;
-  type: 'mcq' | 'long-answer' | 'summarize';
+  type: "mcq" | "long-answer" | "summarize";
   questions?: {
     question: string;
     options?: string[];
@@ -21,20 +21,20 @@ const Workspace = () => {
   const { id } = useParams();
   const [data, setData] = useState<WorkspaceData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchWorkspace = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem("token");
         const response = await axios.get(`${b_link}/api/workspace/${id}`, {
           headers: {
-            'Authorization': `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         });
         setData(response.data);
       } catch (err) {
-        setError('Failed to load workspace');
+        setError("Failed to load workspace");
         console.error(err);
       } finally {
         setLoading(false);
@@ -56,8 +56,8 @@ const Workspace = () => {
           <YouTube
             videoId={data.videoId}
             opts={{
-              height: '360',
-              width: '640',
+              height: "360",
+              width: "640",
               playerVars: {
                 autoplay: 0,
               },
@@ -67,7 +67,7 @@ const Workspace = () => {
       </div>
 
       <div className="content-section">
-        {data.type === 'mcq' && data.questions && (
+        {data.type === "mcq" && data.questions && (
           <div className="mcq-section">
             <h3>Multiple Choice Questions</h3>
             {data.questions.map((q, qIndex) => (
@@ -76,10 +76,7 @@ const Workspace = () => {
                 <div className="options">
                   {q.options?.map((option, oIndex) => (
                     <label key={oIndex} className="option">
-                      <input
-                        type="radio"
-                        name={`question-${qIndex}`}
-                      />
+                      <input type="radio" name={`question-${qIndex}`} />
                       {option}
                     </label>
                   ))}
@@ -89,7 +86,7 @@ const Workspace = () => {
           </div>
         )}
 
-        {data.type === 'long-answer' && data.questions && (
+        {data.type === "long-answer" && data.questions && (
           <div className="laq-section">
             <h3>Long Answer Questions</h3>
             {data.questions.map((q, index) => (
@@ -105,7 +102,7 @@ const Workspace = () => {
           </div>
         )}
 
-        {data.type === 'summarize' && (
+        {data.type === "summarize" && (
           <div className="summary-section">
             <h3>Video Summary</h3>
             <p>{data.summary}</p>

@@ -2,6 +2,7 @@ import { use, useState } from "react";
 import AuthModal from "./AuthModal";
 import axios from "axios";
 import { b_link } from "./Baselink.js";
+
 type QuizFormat = "mcq" | "long-answer" | "summarize";
 
 const Home = () => {
@@ -10,7 +11,7 @@ const Home = () => {
   const [questionCount, setQuestionCount] = useState(10);
   const [wordCount, setWordCount] = useState(250);
   const [showAuthModal, setShowAuthModal] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleFormatChange = (format: QuizFormat) => {
     setSelectedFormat(format);
@@ -36,45 +37,31 @@ const Home = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
-    const response = await axios.post(`${b_link}/api/addworkspace`,{videoUrl:youtubeLink, type: selectedFormat, count: selectedFormat === "summarize" ? wordCount : questionCount}, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    const data = response.data;
-    console.log(data)
+
     if (!token) {
       setShowAuthModal(true);
       return;
     }
 
+    setIsLoading(true);
+
     try {
-      const response = await fetch('http://localhost:5000/api/addworkspace', {
-        method: 'POST',
+      const response = await axios.post(`${b_link}/api/addworkspace`, {
+        videoUrl: youtubeLink,
+        type: selectedFormat,
+        count: selectedFormat === 'summarize' ? wordCount : questionCount
+      }, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          videoUrl: youtubeLink,
-          type: selectedFormat,
-          count: selectedFormat === 'summarize' ? wordCount : questionCount
-        })
+        }
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to create workspace');
-      }
-
-      // Redirect to workspace with the ID
+      const data = response.data;
       window.location.href = `/workspace/${data.workspaceId}`;
-
     } catch (error) {
       console.error('Error:', error);
-      // You might want to show an error message to the user here
+      setIsLoading(false);
     }
   };
 
@@ -82,6 +69,13 @@ const Home = () => {
     <div className="home-container">
       <h1>Welcome to QuizTube</h1>
       <p>Create and take quizzes from YouTube videos</p>
+      
+      {isLoading && (
+        <div className="loading-container">
+          <img src="/loading.svg" alt="Loading..." />
+          <p>Generating your workspace...</p>
+        </div>
+      )}
       
       <form onSubmit={handleSubmit} className="video-form">
         <div className="input-group">
@@ -183,10 +177,11 @@ const Home = () => {
           <div className="count-description">{getDescription()}</div>
         </div>
 
-        <button type="submit" className="generate-button">
-          Generate {selectedFormat === "mcq" ? "Quiz" : 
-                   selectedFormat === "long-answer" ? "Questions" : 
-                   "Summary"}
+        <button type="submit" className="generate-button" disabled={isLoading}>
+          {isLoading ? 'Generating...' : 
+            selectedFormat === "mcq" ? "Generate Quiz" : 
+            selectedFormat === "long-answer" ? "Generate Questions" : 
+            "Generate Summary"}
         </button>
       </form>
 
