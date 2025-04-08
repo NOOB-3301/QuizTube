@@ -1,4 +1,4 @@
-import { useState, useEffect, ChangeEvent } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import YouTube from "react-youtube";
 import axios from "axios";
