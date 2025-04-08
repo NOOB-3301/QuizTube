@@ -21,8 +21,10 @@ const Workspace = () => {
   const [data, setData] = useState<WorkspaceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  // Object to hold user answers: key is question index and value is selected option index
   const [userAnswers, setUserAnswers] = useState<Record<number, number>>({});
+  const [results, setResults] = useState<{ isCorrect: boolean; correctIndex: number }[] | null>(null);
+  const [currentScore, setCurrentScore] = useState<number | null>(null);
+  const [newAverageScore, setNewAverageScore] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchWorkspace = async () => {
@@ -45,16 +47,30 @@ const Workspace = () => {
     fetchWorkspace();
   }, [id]);
 
-  // Handler for when a radio option is selected
   const handleOptionChange = (qIndex: number, optionIndex: number) => {
     setUserAnswers((prev) => ({ ...prev, [qIndex]: optionIndex }));
   };
 
-  // Submit handler – you can modify this function to send the data to your backend or process it as needed.
-  const handleSubmit = () => {
-    console.log("User answers:", userAnswers);
-    // Further processing like comparing with correct answers, etc.
-    alert("Submitted answers! Check console for details.");
+  const handleSubmit = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${b_link}/api/workspace/${id}/submit`,
+        { userAnswers },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      setResults(response.data.results);
+      setCurrentScore(response.data.currentScore);
+      setNewAverageScore(response.data.newAverageScore);
+    } catch (err) {
+      setError("Failed to submit answers");
+      console.error(err);
+    }
   };
 
   if (loading)
@@ -63,7 +79,6 @@ const Workspace = () => {
     return <div className="text-center mt-10 text-red-500">{error}</div>;
   if (!data) return <div className="text-center mt-10">No data found</div>;
 
-  // For MCQs we want to show submit button when all questions have a selected answer.
   const allAnswered =
     data.type === "mcq" && data.questions
       ? Object.keys(userAnswers).length === data.questions.length
@@ -77,7 +92,6 @@ const Workspace = () => {
         </h1>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-          {/* Video */}
           <div className="flex justify-center">
             <div className="w-full max-w-2xl aspect-video">
               <YouTube
@@ -91,15 +105,29 @@ const Workspace = () => {
             </div>
           </div>
 
-          {/* Questions */}
           <div className="bg-white text-black rounded-xl shadow-md p-6 max-h-[800px] overflow-y-auto">
             {data.type === "mcq" && data.questions && (
               <div>
                 <h3 className="text-xl font-semibold mb-4">
                   Multiple Choice Questions
                 </h3>
+                {currentScore !== null && (
+                  <div className="mb-4 p-4 bg-blue-100 rounded-lg">
+                    <p className="font-semibold">Current Score: {currentScore}%</p>
+                    <p className="text-sm">New Average Score: {newAverageScore}%</p>
+                  </div>
+                )}
                 {data.questions.map((q, qIndex) => (
-                  <div key={qIndex} className="mb-6">
+                  <div 
+                    key={qIndex} 
+                    className={`mb-6 p-4 rounded-lg ${
+                      results 
+                        ? results[qIndex].isCorrect 
+                          ? 'border-2 border-green-500 bg-green-50'
+                          : 'border-2 border-red-500 bg-red-50'
+                        : ''
+                    }`}
+                  >
                     <p className="font-medium">{q.question}</p>
                     <div className="mt-2 space-y-2">
                       {q.options?.map((option, optionIndex) => (
@@ -113,13 +141,16 @@ const Workspace = () => {
                             id={`q${qIndex}-opt${optionIndex}`}
                             className="form-radio text-blue-600"
                             checked={userAnswers[qIndex] === optionIndex}
-                            onChange={() =>
-                              handleOptionChange(qIndex, optionIndex)
-                            }
+                            onChange={() => handleOptionChange(qIndex, optionIndex)}
+                            disabled={results !== null}
                           />
                           <label
                             htmlFor={`q${qIndex}-opt${optionIndex}`}
-                            className="text-sm"
+                            className={`text-sm ${
+                              results && results[qIndex].correctIndex === optionIndex
+                                ? 'text-green-700 font-semibold'
+                                : ''
+                            }`}
                           >
                             {option}
                           </label>
@@ -128,17 +159,16 @@ const Workspace = () => {
                     </div>
                   </div>
                 ))}
-                {/* Submit Button */}
                 <button
                   onClick={handleSubmit}
-                  disabled={!allAnswered}
+                  disabled={!allAnswered || results !== null}
                   className={`mt-4 w-full py-2 px-4 rounded-md text-white ${
-                    allAnswered
+                    allAnswered && !results
                       ? "bg-blue-600 hover:bg-blue-700"
                       : "bg-gray-400 cursor-not-allowed"
                   }`}
                 >
-                  Submit Answers
+                  {results ? 'Submitted' : 'Submit Answers'}
                 </button>
               </div>
             )}

@@ -2,13 +2,16 @@ import mongoose from "mongoose";
 
 const quizSchema = new mongoose.Schema({
     question:{
-        type:String
+        type:String,
+        required:true
     },
     options:[{
-        type:String
+        type:String,
+        required:true
     }],
-    connrectIndex:{
-        type:Number
+    correctIndex:{
+        type:Number,
+        required:true
     },
     workspaceId: {
         type: mongoose.Schema.Types.ObjectId,

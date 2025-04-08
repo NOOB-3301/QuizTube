@@ -21,6 +21,14 @@ const userSchema = new mongoose.Schema({
     type:Number,
     default: 0
   },
+  previousTotalScore: {
+    type: Number,
+    default: 0
+  },
+  totalTestCount: {
+    type: Number,
+    default: 0
+  },
   workspaces: {
     type: [{type: mongoose.Schema.Types.ObjectId, ref: "Workspace"}],
     default: []

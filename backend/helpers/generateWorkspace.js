@@ -16,7 +16,7 @@ export async function generateWorkspace(subtitles, type, count) {
     case 'mcq':
       prompt = `Create ${count} multiple choice questions based on the following content. 
 Each question should have one correct answer and three incorrect answers.
-IMPORTANT: Respond ONLY with a JSON object containing an array of questions.
+IMPORTANT: Respond ONLY with a valid JSON object. No markdown, no explanations, just the JSON.
 Format: {
   "questions": [
     {
@@ -28,24 +28,9 @@ Format: {
 }
 Content: ${truncatedSubtitles}`;
       break;
-      
-    case 'long-answer':
-      prompt = `Create ${count} long answer questions based on the following content.
-IMPORTANT: Respond ONLY with a JSON object containing an array of questions and their answer within 100 words.
-Format: {
-  "questions": [
-    {
-      "question": "Explain the concept of...",
-      "answer": ""
-    }
-  ]
-}
-Content: ${truncatedSubtitles}`;
-      break;
-      
     case 'summarize':
       prompt = `Summarize the following content in approximately ${count} words.
-IMPORTANT: Respond ONLY with a JSON object containing the summary.
+IMPORTANT: Respond ONLY with a valid JSON object. No markdown, no explanations, just the JSON.
 Format: {
   "summary": "The content discusses..."
 }
@@ -56,20 +41,37 @@ Content: ${truncatedSubtitles}`;
   try {
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const text = response.text().trim();
+    let text = response.text().trim();
     
-    const cleanJson = text.replace(/^\`\`\`json\s*/, '').replace(/\`\`\`\s*$/, '');
-    
+    // Remove any markdown code block markers and surrounding whitespace
+    text = text.replace(/^(\s*```\s*json\s*|\s*```\s*|\s*```javascript\s*)/i, '');
+    text = text.replace(/\s*```\s*$/g, '');
+    text = text.trim();
+
+    // Ensure the text starts with { and ends with }
+    if (!text.startsWith('{') || !text.endsWith('}')) {
+      throw new Error('Response is not a valid JSON object');
+    }
+
     try {
-      return JSON.parse(cleanJson);
+      const parsed = JSON.parse(text);
+      
+      // Validate the structure based on type
+      if (type === 'mcq' && (!parsed.questions || !Array.isArray(parsed.questions))) {
+        throw new Error('Invalid MCQ response structure');
+      }
+      if (type === 'summarize' && typeof parsed.summary !== 'string') {
+        throw new Error('Invalid summary response structure');
+      }
+      
+      return parsed;
     } catch (parseError) {
       console.error('JSON Parse Error:', parseError);
       console.error('Raw Response:', text);
-      console.error('Cleaned Response:', cleanJson);
-      throw new Error('Failed to parse response');
+      throw new Error('Failed to parse AI response as JSON');
     }
   } catch (error) {
-    console.error('Gemini API Error:', error);
+    console.error('Workspace Generation Error:', error);
     throw error;
   }
 }

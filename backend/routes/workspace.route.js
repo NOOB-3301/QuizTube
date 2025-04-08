@@ -106,4 +106,54 @@ workspaceRouter.get('/workspace/:id', authMiddleware, async (req, res) => {
     }
 });
 
+workspaceRouter.post('/workspace/:id/submit', authMiddleware, async (req, res) => {
+    try {
+        const workspaceId = req.params.id;
+        const userId = req.user.id;
+        const { userAnswers } = req.body;
+
+        // Get correct answers
+        const questions = await QuizModel.find({ workspaceId });
+        if (!questions.length) {
+            return res.status(404).json({ message: 'Questions not found' });
+        }
+
+        // Calculate score
+        let correctCount = 0;
+        const results = questions.map((q, index) => {
+            const isCorrect = userAnswers[index] === q.correctIndex;
+            if (isCorrect) correctCount++;
+            return {
+                isCorrect,
+                correctIndex: q.correctIndex
+            };
+        });
+
+        const currentScore = Math.round((correctCount / questions.length) * 100);
+
+        // Get user's previous stats
+        const user = await User.findById(userId);
+        const newTotalTestCount = user.totalTestCount + 1;
+        const newTotalScore = user.previousTotalScore + currentScore;
+        const newAverageScore = Math.round(newTotalScore / newTotalTestCount);
+
+        // Update user stats
+        await User.findByIdAndUpdate(userId, {
+            previousTotalScore: newTotalScore,
+            totalTestCount: newTotalTestCount,
+            score: newAverageScore
+        });
+
+        res.json({
+            results,
+            currentScore,
+            newAverageScore
+        });
+
+    } catch (error) {
+        console.error('Error submitting answers:', error);
+        res.status(500).json({ message: 'Failed to submit answers' });
+    }
+});
+
 export { workspaceRouter };
